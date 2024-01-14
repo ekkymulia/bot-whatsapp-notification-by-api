@@ -7,3 +7,6 @@ body:{
     "no_wa": "628....",
     "message": "..."
 }
+
+
+npm run start
