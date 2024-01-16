@@ -26,21 +26,21 @@ const startServer = async () => {
 
         app.post('/', (req, res) => {
             try {
-                const { no_wa, message } = req.body;
+                const { no_wa, message } = req.query;
         
-                const schema = Joi.object({
-                    no_wa: Joi.string()
-                        .pattern(/^(628\d{1,})$/)  // Start with 628 and allow at least one digit after it
-                        .min(3)
-                        .max(200),
-                    message: Joi.string().max(100),
-                });
+                // const schema = Joi.object({
+                //     no_wa: Joi.string()
+                //         .pattern(/^(628\d{1,})$/)  // Start with 628 and allow at least one digit after it
+                //         .min(3)
+                //         .max(200),
+                //     message: Joi.string().max(100),
+                // });
         
-                const validationResult = schema.validate({ no_wa, message });
+                // const validationResult = schema.validate({ no_wa, message });
         
-                if (validationResult.error) {
-                    return res.status(400).json({ success: false, message: 'Validation Error', error: validationResult.error.message });
-                }
+                // if (validationResult.error) {
+                //     return res.status(400).json({ success: false, message: 'Validation Error', error: validationResult.error.message });
+                // }
         
                 // The rest of your code for message sending...
                 sm(botwa, `${no_wa}@c.us`, message)
