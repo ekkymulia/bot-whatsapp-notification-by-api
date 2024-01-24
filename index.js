@@ -1,63 +1,63 @@
-import express from "express";
-import dotenv from "dotenv";
-import cors from "cors";
-import { Client } from 'whatsapp-web.js';
-import {initializeWhatsAppClient, sm} from "./src/bot/initializer.js";
-import Joi from 'joi'
-
-dotenv.config();
+const express = require('express');
+const bodyParser = require('body-parser');
+const { DisconnectReason, useMultiFileAuthState } = require('baileys');
+const makeWASocket = require('baileys').default;
+const axios = require("axios");
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cors());
+const port = 3000; // Choose your desired port
 
-const startServer = async () => {
-    const botwa = await initializeWhatsAppClient();
+app.use(bodyParser.json());
 
-    if (botwa) {
-        botwa.on('ready', () => {
-            console.log('Client is ready!');
-        });
+const startSock = async () => {
+    const { state, saveCreds } = await useMultiFileAuthState('./auth');
+    const sock = makeWASocket({
+        printQRInTerminal: true,
+        auth: state
+    });
 
+    sock.ev.on('connection.update', function(update, connection2) {
+        let _a, _b;
+        let connection = update.connection,
+            lastDisconnect = update.lastDisconnect;
 
-        // Start your Express server here if needed
-        const port = process.env.PORT || 3000;
+        if (connection == "close") {
+            if (((_b = (_a = lastDisconnect.error) === null) || _a === void 0 ? void 0 : _a.output) === null || _b === void 0 ? void 0 : _b.statusCode !== DisconnectReason.loggedOut) {
+                startSock()
+            }
+        } else {
+            console.log("connection closed")
+        }
 
-        app.post('/', (req, res) => {
+        console.log("connection update ".update)
+    });
+
+    sock.ev.on('creds.update', saveCreds)
+    sock.ev.on('messages.upsert', async m => {
+        const msg = m.messages[0];
+        
+        app.post('/', async (req, res) => {
+            const { no_wa, message } = req.query;
+    
             try {
-                const { no_wa, message } = req.query;
-        
-                // const schema = Joi.object({
-                //     no_wa: Joi.string()
-                //         .pattern(/^(628\d{1,})$/)  // Start with 628 and allow at least one digit after it
-                //         .min(3)
-                //         .max(200),
-                //     message: Joi.string().max(100),
-                // });
-        
-                // const validationResult = schema.validate({ no_wa, message });
-        
-                // if (validationResult.error) {
-                //     return res.status(400).json({ success: false, message: 'Validation Error', error: validationResult.error.message });
-                // }
-        
-                // The rest of your code for message sending...
-                sm(botwa, `${no_wa}@c.us`, message)
-        
-                return res.status(200).json({ success: true, message: 'Message sent successfully' });
+                // Send the message using WhatsApp API
+                await sock.sendMessage(`${no_wa}@s.whatsapp.net`, { text: message });
+    
+                // Respond with success
+                res.status(200).json({ success: true, message: 'Message sent successfully' });
             } catch (error) {
-                return res.status(500).json({ success: false, message: 'Internal Server Error', error: error.message });
+                // Handle errors
+                console.error('Error sending message:', error);
+                res.status(500).json({ success: false, error: 'Failed to send message' });
             }
         });
-
-
-        app.listen(port, () => {
-            console.log(`Server started on http://localhost:${port}`);
-        });
-    } else {
-        console.error('Failed to initialize WhatsApp client.');
-    }
+        
+        console.log('Received Message', JSON.stringify(msg))
+    })
 };
 
-startServer();
+startSock()
+
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+});
