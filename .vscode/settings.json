@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/6ea0d3d8-20ae-4ee1-8227-7cda938b0165/resourceGroups/thena/providers/Microsoft.Web/sites/api-chatwa",
+    "appService.deploySubpath": "."
+}
