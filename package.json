@@ -4,10 +4,9 @@
   "description": "try develop bot wa",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon --ignore auth/ index.js nodemon -r dotenv/config dotenv_config_path=.env"
+    "start": "nodemon index.js --ignore auth/ nodemon -r dotenv/config dotenv_config_path=.env"
   },
-  "author": "ekky-surya",
+  "author": "semapor",
   "license": "ISC",
   "dependencies": {
     "axios": "^1.4.0",
